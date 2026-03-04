@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 
 export default function Page(){
 
-  const target = new Date('2026-03-20T08:00:00')
+  const target = new Date('2026-03-21T08:00:00')
 
   const getTime = ()=>{
     const now = new Date()
