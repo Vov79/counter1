@@ -89,7 +89,7 @@ export default function Page() {
 
   <div className="group flex items-end relative">
 
-    <img src="/lift_ept.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl
+    <img src="/m4.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl
     transition-all duration-700 ease-[cubic-bezier(.19,1,.22,1)]
     -mr-16 rotate-[-10deg] z-10
     group-hover:translate-x-[-140px]
@@ -113,7 +113,7 @@ export default function Page() {
     group-hover:translate-x-[-35px]
     hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-50"/>
 
-    <img src="/m4.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl
+    <img src="/lift_ept.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl
     transition-all duration-700 ease-[cubic-bezier(.19,1,.22,1)]
     -mr-16 rotate-[0deg] z-50
     hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-[100]"/>
