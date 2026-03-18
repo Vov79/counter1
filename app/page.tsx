@@ -379,6 +379,9 @@ function Question() {
   const [questionsError, setQuestionsError] = useState('')
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState<Record<number, AnswerDraft>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
+  const [isSubmitted, setIsSubmitted] = useState(false)
 
   useEffect(() => {
     let isMounted = true
@@ -448,7 +451,7 @@ function Question() {
     )
   }
 
-  if (!currentQuestion || !currentRule) {
+  if (isSubmitted || !currentQuestion || !currentRule) {
     return (
       <div className="max-w-2xl mx-auto text-center">
         <div className="rounded-[32px] border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl p-8 md:p-10">
@@ -457,11 +460,11 @@ function Question() {
           </p>
 
           <h2 className="text-3xl md:text-5xl font-semibold mb-4">
-            Все ответы заполнены
+            Ответы отправлены
           </h2>
 
           <p className="text-white/60 text-base md:text-lg">
-            Дальше здесь будет красивый экран отправки ответов в Supabase.
+            Я сохранил их в Supabase для текущего пользователя.
           </p>
         </div>
       </div>
@@ -497,6 +500,10 @@ function Question() {
         )}
 
         <div className="mt-8 flex flex-wrap gap-3">
+          {submitError ? (
+            <p className="basis-full text-red-300">{submitError}</p>
+          ) : null}
+
           {step > 0 ? (
             <button
               onClick={() => setStep((prev) => prev - 1)}
@@ -507,22 +514,29 @@ function Question() {
           ) : null}
 
           <button
-            onClick={() => {
+            onClick={async () => {
               if (!canContinueQuestion(currentRule.kind, currentAnswer)) {
                 return
               }
 
               if (isLastStep) {
-                setStep(questions.length)
+                await submitAnswers({
+                  questions,
+                  answers,
+                  setSubmitError,
+                  setIsSubmitting,
+                  setIsSubmitted,
+                })
                 return
               }
 
+              setSubmitError('')
               setStep((prev) => prev + 1)
             }}
-            disabled={!canContinueQuestion(currentRule.kind, currentAnswer)}
+            disabled={!canContinueQuestion(currentRule.kind, currentAnswer) || isSubmitting}
             className="px-5 py-3 rounded-2xl bg-white text-black font-medium disabled:opacity-50"
           >
-            {isLastStep ? 'Готово' : 'Далее'}
+            {isLastStep ? (isSubmitting ? 'Отправляем...' : 'Отправить') : 'Далее'}
           </button>
         </div>
       </div>
@@ -861,6 +875,201 @@ function canContinueQuestion(kind: QuestionKind, answer?: AnswerDraft) {
   }
 
   return false
+}
+
+async function submitAnswers({
+  questions,
+  answers,
+  setSubmitError,
+  setIsSubmitting,
+  setIsSubmitted,
+}: {
+  questions: QuestionRecord[]
+  answers: Record<number, AnswerDraft>
+  setSubmitError: (value: string) => void
+  setIsSubmitting: (value: boolean) => void
+  setIsSubmitted: (value: boolean) => void
+}) {
+  setIsSubmitting(true)
+  setSubmitError('')
+
+  try {
+    const client = getSupabaseClient()
+    const { data: userResult, error: userError } = await client.auth.getUser()
+
+    if (userError || !userResult.user) {
+      throw new Error('Не удалось определить текущего пользователя.')
+    }
+
+    const rows = []
+
+    for (const question of questions) {
+      const rule = QUESTION_RULES[question.id]
+
+      if (!rule || rule.kind === 'info') {
+        continue
+      }
+
+      const answer = answers[question.id]
+
+      if (!canContinueQuestion(rule.kind, answer)) {
+        throw new Error(`Не заполнен вопрос #${question.id}.`)
+      }
+
+      if (rule.kind === 'text') {
+        rows.push({
+          user_id: userResult.user.id,
+          question_id: question.id,
+          answer_kind: 'text',
+          answer_text: answer?.text?.trim() ?? '',
+          answer_choice: null,
+          answer_number: null,
+          file_path: null,
+        })
+        continue
+      }
+
+      if (rule.kind === 'number-choice') {
+        rows.push({
+          user_id: userResult.user.id,
+          question_id: question.id,
+          answer_kind: 'number_choice',
+          answer_text: null,
+          answer_choice: null,
+          answer_number: answer?.number ?? null,
+          file_path: null,
+        })
+        continue
+      }
+
+      if (rule.kind === 'single-choice') {
+        rows.push({
+          user_id: userResult.user.id,
+          question_id: question.id,
+          answer_kind: 'single_choice',
+          answer_text: null,
+          answer_choice: answer?.choice ?? null,
+          answer_number: null,
+          file_path: null,
+        })
+        continue
+      }
+
+      const upload = await uploadAsset({
+        userId: userResult.user.id,
+        questionId: question.id,
+        kind: rule.kind,
+        answer,
+      })
+
+      rows.push({
+        user_id: userResult.user.id,
+        question_id: question.id,
+        answer_kind: upload.answerKind,
+        answer_text: null,
+        answer_choice: null,
+        answer_number: null,
+        file_path: upload.filePath,
+      })
+    }
+
+    const { error } = await client.from('Answers').upsert(rows, {
+      onConflict: 'user_id,question_id',
+    })
+
+    if (error) {
+      throw new Error(getSubmitErrorMessage(error.message))
+    }
+
+    setIsSubmitted(true)
+  } catch (error) {
+    setSubmitError(error instanceof Error ? error.message : 'Не удалось сохранить ответы.')
+  } finally {
+    setIsSubmitting(false)
+  }
+}
+
+async function uploadAsset({
+  userId,
+  questionId,
+  kind,
+  answer,
+}: {
+  userId: string
+  questionId: number
+  kind: QuestionKind
+  answer?: AnswerDraft
+}) {
+  const client = getSupabaseClient()
+
+  if (kind === 'photo' && answer?.file) {
+    const extension = answer.file.name.split('.').pop() || 'jpg'
+    const objectPath = `${userId}/question-${questionId}-${Date.now()}.${extension}`
+    const { error } = await client.storage.from('photos').upload(objectPath, answer.file, {
+      upsert: true,
+    })
+
+    if (error) {
+      throw new Error(`Не удалось загрузить фото для вопроса #${questionId}: ${error.message}`)
+    }
+
+    return {
+      answerKind: 'photo' as const,
+      filePath: `photos/${objectPath}`,
+    }
+  }
+
+  if (kind === 'drawing' && answer?.blob) {
+    const objectPath = `${userId}/question-${questionId}-${Date.now()}.png`
+    const file = new File([answer.blob], `question-${questionId}.png`, { type: 'image/png' })
+    const { error } = await client.storage.from('drawings').upload(objectPath, file, {
+      upsert: true,
+      contentType: 'image/png',
+    })
+
+    if (error) {
+      throw new Error(`Не удалось загрузить рисунок для вопроса #${questionId}: ${error.message}`)
+    }
+
+    return {
+      answerKind: 'drawing' as const,
+      filePath: `drawings/${objectPath}`,
+    }
+  }
+
+  if (kind === 'voice' && answer?.blob) {
+    const objectPath = `${userId}/question-${questionId}-${Date.now()}.webm`
+    const file = new File([answer.blob], `question-${questionId}.webm`, { type: 'audio/webm' })
+    const { error } = await client.storage.from('voices').upload(objectPath, file, {
+      upsert: true,
+      contentType: 'audio/webm',
+    })
+
+    if (error) {
+      throw new Error(`Не удалось загрузить голос для вопроса #${questionId}: ${error.message}`)
+    }
+
+    return {
+      answerKind: 'voice' as const,
+      filePath: `voices/${objectPath}`,
+    }
+  }
+
+  throw new Error(`Для вопроса #${questionId} не найден файл для отправки.`)
+}
+
+function getSubmitErrorMessage(message: string) {
+  const normalizedMessage = message.toLowerCase()
+
+  if (normalizedMessage.includes('row-level security')) {
+    return 'RLS policy не дает сохранить ответы в таблицу Answers.'
+  }
+
+  if (normalizedMessage.includes('no unique') || normalizedMessage.includes('constraint')) {
+    return 'Для upsert в Answers нужен уникальный индекс по user_id и question_id.'
+  }
+
+  return `Не удалось сохранить ответы: ${message}`
 }
 
 function getQuestionsErrorMessage(message: string) {
