@@ -450,22 +450,26 @@ function Question() {
 
   if (!currentQuestion || !currentRule) {
     return (
-      <div className="text-center">
-        <h3 className="mb-4">Готово</h3>
-        <pre className="text-white/60 text-sm">
-          {JSON.stringify(answers, null, 2)}
-        </pre>
+      <div className="max-w-2xl mx-auto text-center">
+        <div className="rounded-[32px] border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl p-8 md:p-10">
+          <p className="text-white/50 text-xs tracking-[0.35em] uppercase mb-4">
+            Готово
+          </p>
+
+          <h2 className="text-3xl md:text-5xl font-semibold mb-4">
+            Все ответы заполнены
+          </h2>
+
+          <p className="text-white/60 text-base md:text-lg">
+            Дальше здесь будет красивый экран отправки ответов в Supabase.
+          </p>
+        </div>
       </div>
     )
   }
 
   return (
     <div className="max-w-3xl mx-auto text-left">
-      <div className="mb-6 flex items-center justify-between text-white/45 text-sm">
-        <span>Вопрос {step + 1} / {questions.length}</span>
-        <span>ID {currentQuestion.id}</span>
-      </div>
-
       <div className="rounded-[32px] border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl p-6 md:p-8">
         {currentRule.kind === 'info' ? (
           <div className="py-10 text-center">
