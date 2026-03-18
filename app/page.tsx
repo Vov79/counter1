@@ -1,9 +1,44 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getSupabaseClient } from '@/lib/supabase/client'
 
 const TARGET_DATE = new Date('2026-03-21T08:00:00')
+
+const QUESTION_RULES: Record<number, QuestionRule> = {
+  1: { kind: 'text' },
+  2: { kind: 'drawing' },
+  3: { kind: 'text' },
+  4: { kind: 'photo' },
+  5: { kind: 'info' },
+  6: { kind: 'drawing' },
+  7: { kind: 'text' },
+  8: { kind: 'number-choice', options: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'] },
+  9: { kind: 'voice' },
+  10: { kind: 'single-choice', options: ['поцеловать', 'обнять', 'укусить'] },
+  12: { kind: 'single-choice', options: ['такое', 'под рево пойдет', 'пиздец как'] },
+}
+
+type QuestionKind = 'text' | 'drawing' | 'photo' | 'info' | 'number-choice' | 'voice' | 'single-choice'
+
+type QuestionRule = {
+  kind: QuestionKind
+  options?: string[]
+}
+
+type QuestionRecord = {
+  id: number
+  question: string
+}
+
+type AnswerDraft = {
+  text?: string
+  choice?: string
+  number?: number
+  file?: File
+  blob?: Blob
+  previewUrl?: string
+}
 
 export default function Page() {
   const supabaseError = getSupabaseConfigError()
@@ -339,11 +374,11 @@ function QuestionsGate({
 }
 
 function Question() {
-  const [questions, setQuestions] = useState<string[]>([])
+  const [questions, setQuestions] = useState<QuestionRecord[]>([])
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(true)
   const [questionsError, setQuestionsError] = useState('')
   const [step, setStep] = useState(0)
-  const [answers, setAnswers] = useState<string[]>([])
+  const [answers, setAnswers] = useState<Record<number, AnswerDraft>>({})
 
   useEffect(() => {
     let isMounted = true
@@ -351,7 +386,7 @@ function Question() {
     const loadQuestions = async () => {
       const { data, error } = await getSupabaseClient()
         .from('Questions')
-        .select('question')
+        .select('id, question')
         .order('id', { ascending: true })
 
       if (!isMounted) {
@@ -365,8 +400,12 @@ function Question() {
       }
 
       const loadedQuestions = (data ?? [])
-        .map((item) => item.question?.trim())
-        .filter((item): item is string => Boolean(item))
+        .filter((item) => QUESTION_RULES[item.id])
+        .map((item) => ({
+          id: item.id,
+          question: item.question?.trim() ?? '',
+        }))
+        .filter((item) => Boolean(item.question))
 
       setQuestions(loadedQuestions)
       setQuestionsError('')
@@ -380,10 +419,10 @@ function Question() {
     }
   }, [])
 
-  const next = (value: string) => {
-    setAnswers(prev => [...prev, value])
-    setStep(s => s + 1)
-  }
+  const currentQuestion = questions[step]
+  const currentRule = currentQuestion ? QUESTION_RULES[currentQuestion.id] : null
+  const currentAnswer = currentQuestion ? answers[currentQuestion.id] : undefined
+  const isLastStep = step === questions.length - 1
 
   if (isLoadingQuestions) {
     return (
@@ -409,7 +448,7 @@ function Question() {
     )
   }
 
-  if (step >= questions.length) {
+  if (!currentQuestion || !currentRule) {
     return (
       <div className="text-center">
         <h3 className="mb-4">Готово</h3>
@@ -421,25 +460,403 @@ function Question() {
   }
 
   return (
-    <div className="max-w-xl mx-auto text-left">
-      <div className="mb-6 text-lg">{questions[step]}</div>
+    <div className="max-w-3xl mx-auto text-left">
+      <div className="mb-6 flex items-center justify-between text-white/45 text-sm">
+        <span>Вопрос {step + 1} / {questions.length}</span>
+        <span>ID {currentQuestion.id}</span>
+      </div>
 
+      <div className="rounded-[32px] border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl p-6 md:p-8">
+        {currentRule.kind === 'info' ? (
+          <div className="py-10 text-center">
+            <h2 className="text-3xl md:text-5xl font-semibold leading-tight whitespace-pre-line">
+              {currentQuestion.question}
+            </h2>
+          </div>
+        ) : (
+          <>
+            <h2 className="text-2xl md:text-4xl font-medium mb-8">
+              {currentQuestion.question}
+            </h2>
+
+            <QuestionInput
+              rule={currentRule}
+              answer={currentAnswer}
+              onChange={(draft) => {
+                setAnswers((prev) => ({
+                  ...prev,
+                  [currentQuestion.id]: draft,
+                }))
+              }}
+            />
+          </>
+        )}
+
+        <div className="mt-8 flex flex-wrap gap-3">
+          {step > 0 ? (
+            <button
+              onClick={() => setStep((prev) => prev - 1)}
+              className="px-5 py-3 rounded-2xl bg-white/10 border border-white/10"
+            >
+              Назад
+            </button>
+          ) : null}
+
+          <button
+            onClick={() => {
+              if (!canContinueQuestion(currentRule.kind, currentAnswer)) {
+                return
+              }
+
+              if (isLastStep) {
+                setStep(questions.length)
+                return
+              }
+
+              setStep((prev) => prev + 1)
+            }}
+            disabled={!canContinueQuestion(currentRule.kind, currentAnswer)}
+            className="px-5 py-3 rounded-2xl bg-white text-black font-medium disabled:opacity-50"
+          >
+            {isLastStep ? 'Готово' : 'Далее'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function QuestionInput({
+  rule,
+  answer,
+  onChange,
+}: {
+  rule: QuestionRule
+  answer?: AnswerDraft
+  onChange: (draft: AnswerDraft) => void
+}) {
+  if (rule.kind === 'text') {
+    return (
       <input
-        className="w-full p-3 rounded-xl bg-white/10 border border-white/10 mb-4"
-        placeholder="Твой ответ..."
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            next((e.target as HTMLInputElement).value)
-            ;(e.target as HTMLInputElement).value = ''
+        value={answer?.text ?? ''}
+        onChange={(event) => onChange({ text: event.target.value })}
+        className="w-full p-4 rounded-2xl bg-white/10 border border-white/10 outline-none focus:border-pink-300/60"
+        placeholder="Напиши ответ..."
+      />
+    )
+  }
+
+  if (rule.kind === 'photo') {
+    return (
+      <div className="space-y-4">
+        <label className="flex items-center justify-center w-full min-h-[220px] rounded-3xl border border-dashed border-white/15 bg-white/5 cursor-pointer hover:bg-white/10 transition">
+          <span className="text-white/65">Нажми, чтобы выбрать фото</span>
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(event) => {
+              const file = event.target.files?.[0]
+              if (!file) {
+                return
+              }
+
+              onChange({
+                file,
+                previewUrl: URL.createObjectURL(file),
+              })
+            }}
+          />
+        </label>
+
+        {answer?.previewUrl ? (
+          <img src={answer.previewUrl} alt="" className="max-h-[420px] rounded-2xl border border-white/10" />
+        ) : null}
+      </div>
+    )
+  }
+
+  if (rule.kind === 'drawing') {
+    return <DrawingInput answer={answer} onChange={onChange} />
+  }
+
+  if (rule.kind === 'number-choice' || rule.kind === 'single-choice') {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        {rule.options?.map((option) => {
+          const isSelected = rule.kind === 'number-choice'
+            ? answer?.number === Number(option)
+            : answer?.choice === option
+
+          return (
+            <button
+              key={option}
+              onClick={() => onChange(rule.kind === 'number-choice' ? { number: Number(option) } : { choice: option })}
+              className={`px-4 py-4 rounded-2xl border transition ${isSelected ? 'bg-white text-black border-white' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
+            >
+              {option}
+            </button>
+          )
+        })}
+      </div>
+    )
+  }
+
+  if (rule.kind === 'voice') {
+    return <VoiceInput answer={answer} onChange={onChange} />
+  }
+
+  return null
+}
+
+function DrawingInput({
+  answer,
+  onChange,
+}: {
+  answer?: AnswerDraft
+  onChange: (draft: AnswerDraft) => void
+}) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const isDrawingRef = useRef(false)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    const context = canvas?.getContext('2d')
+
+    if (!canvas || !context) {
+      return
+    }
+
+    context.fillStyle = '#fff'
+    context.fillRect(0, 0, canvas.width, canvas.height)
+    context.strokeStyle = '#111'
+    context.lineWidth = 4
+    context.lineCap = 'round'
+    context.lineJoin = 'round'
+
+    if (answer?.previewUrl) {
+      const image = new Image()
+      image.onload = () => {
+        context.drawImage(image, 0, 0, canvas.width, canvas.height)
+      }
+      image.src = answer.previewUrl
+    }
+  }, [answer?.previewUrl])
+
+  const getPoint = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current
+    if (!canvas) {
+      return { x: 0, y: 0 }
+    }
+
+    const rect = canvas.getBoundingClientRect()
+    return {
+      x: ((event.clientX - rect.left) / rect.width) * canvas.width,
+      y: ((event.clientY - rect.top) / rect.height) * canvas.height,
+    }
+  }
+
+  const saveCanvas = () => {
+    const canvas = canvasRef.current
+    if (!canvas) {
+      return
+    }
+
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        return
+      }
+
+      onChange({
+        blob,
+        previewUrl: canvas.toDataURL('image/png'),
+      })
+    }, 'image/png')
+  }
+
+  return (
+    <div className="space-y-4">
+      <canvas
+        ref={canvasRef}
+        width={1000}
+        height={700}
+        className="w-full aspect-[10/7] rounded-3xl bg-white border border-white/10 touch-none"
+        onPointerDown={(event) => {
+          const context = canvasRef.current?.getContext('2d')
+          if (!context) {
+            return
+          }
+
+          const point = getPoint(event)
+          isDrawingRef.current = true
+          context.beginPath()
+          context.moveTo(point.x, point.y)
+        }}
+        onPointerMove={(event) => {
+          if (!isDrawingRef.current) {
+            return
+          }
+
+          const context = canvasRef.current?.getContext('2d')
+          if (!context) {
+            return
+          }
+
+          const point = getPoint(event)
+          context.lineTo(point.x, point.y)
+          context.stroke()
+        }}
+        onPointerUp={() => {
+          isDrawingRef.current = false
+          saveCanvas()
+        }}
+        onPointerLeave={() => {
+          if (isDrawingRef.current) {
+            isDrawingRef.current = false
+            saveCanvas()
           }
         }}
       />
 
-      <button onClick={() => next('')} className="px-4 py-2 bg-white text-black rounded-xl">
-        Далее
+      <button
+        onClick={() => {
+          const canvas = canvasRef.current
+          const context = canvas?.getContext('2d')
+          if (!canvas || !context) {
+            return
+          }
+
+          context.fillStyle = '#fff'
+          context.fillRect(0, 0, canvas.width, canvas.height)
+          context.strokeStyle = '#111'
+          onChange({})
+        }}
+        className="px-4 py-2 rounded-2xl bg-white/10 border border-white/10"
+      >
+        Очистить
       </button>
     </div>
   )
+}
+
+function VoiceInput({
+  answer,
+  onChange,
+}: {
+  answer?: AnswerDraft
+  onChange: (draft: AnswerDraft) => void
+}) {
+  const [isRecording, setIsRecording] = useState(false)
+  const [recordingError, setRecordingError] = useState('')
+  const recorderRef = useRef<MediaRecorder | null>(null)
+  const chunksRef = useRef<Blob[]>([])
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const recorder = new MediaRecorder(stream)
+      chunksRef.current = []
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunksRef.current.push(event.data)
+        }
+      }
+
+      recorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
+        onChange({
+          blob,
+          previewUrl: URL.createObjectURL(blob),
+        })
+
+        stream.getTracks().forEach((track) => track.stop())
+      }
+
+      recorder.start()
+      recorderRef.current = recorder
+      setIsRecording(true)
+      setRecordingError('')
+    } catch (error) {
+      setRecordingError(error instanceof Error ? error.message : 'Не удалось записать голос.')
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-3">
+        {!isRecording ? (
+          <button
+            onClick={() => void startRecording()}
+            className="px-5 py-3 rounded-2xl bg-white text-black font-medium"
+          >
+            Записать голос
+          </button>
+        ) : (
+          <button
+            onClick={() => {
+              recorderRef.current?.stop()
+              setIsRecording(false)
+            }}
+            className="px-5 py-3 rounded-2xl bg-red-300 text-black font-medium"
+          >
+            Остановить запись
+          </button>
+        )}
+
+        {answer?.previewUrl ? (
+          <button
+            onClick={() => onChange({})}
+            className="px-5 py-3 rounded-2xl bg-white/10 border border-white/10"
+          >
+            Очистить
+          </button>
+        ) : null}
+      </div>
+
+      {isRecording ? (
+        <p className="text-white/60">Запись идет...</p>
+      ) : null}
+
+      {recordingError ? (
+        <p className="text-red-300">{recordingError}</p>
+      ) : null}
+
+      {answer?.previewUrl ? (
+        <audio controls className="w-full">
+          <source src={answer.previewUrl} />
+        </audio>
+      ) : null}
+    </div>
+  )
+}
+
+function canContinueQuestion(kind: QuestionKind, answer?: AnswerDraft) {
+  if (kind === 'info') {
+    return true
+  }
+
+  if (kind === 'text') {
+    return Boolean(answer?.text?.trim())
+  }
+
+  if (kind === 'drawing' || kind === 'voice') {
+    return Boolean(answer?.blob)
+  }
+
+  if (kind === 'photo') {
+    return Boolean(answer?.file)
+  }
+
+  if (kind === 'number-choice') {
+    return typeof answer?.number === 'number'
+  }
+
+  if (kind === 'single-choice') {
+    return Boolean(answer?.choice)
+  }
+
+  return false
 }
 
 function getQuestionsErrorMessage(message: string) {
