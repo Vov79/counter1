@@ -96,7 +96,7 @@ export default function Page() {
               }}
               className="px-4 py-2 rounded-xl bg-white/10 border border-white/10 hover:bg-white hover:text-black transition"
             >
-              Logout
+              Выйти
             </button>
           ) : null}
         </div>
@@ -235,7 +235,7 @@ function LoginCard({ supabaseError }: { supabaseError: string }) {
     }
 
     if (error) {
-      setErrorMessage(error.message)
+      setErrorMessage(getAuthErrorMessage(error.message))
     }
 
     setIsSubmitting(false)
@@ -245,15 +245,15 @@ function LoginCard({ supabaseError }: { supabaseError: string }) {
     <div className="max-w-md mx-auto text-left">
       <div className="rounded-[32px] border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl p-8 md:p-10">
         <p className="text-white/50 text-xs tracking-[0.35em] uppercase mb-4">
-          Private access
+          Доступ
         </p>
 
         <h1 className="text-3xl md:text-4xl font-medium mb-3">
-          Sign in to open the questions
+          Войди, чтобы открыть вопросы
         </h1>
 
         <p className="text-white/55 mb-8">
-          Enter your email and password from Supabase Auth.
+          Введи email и пароль пользователя из Supabase Auth.
         </p>
 
         {supabaseError ? (
@@ -276,7 +276,7 @@ function LoginCard({ supabaseError }: { supabaseError: string }) {
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             className="w-full p-4 rounded-2xl bg-white/10 border border-white/10 outline-none focus:border-pink-300/60"
-            placeholder="Password"
+            placeholder="Пароль"
             autoComplete="current-password"
             required
           />
@@ -290,12 +290,28 @@ function LoginCard({ supabaseError }: { supabaseError: string }) {
             disabled={isSubmitting}
             className="w-full px-4 py-3 rounded-2xl bg-white text-black font-medium transition disabled:opacity-60"
           >
-            {isSubmitting ? 'Signing in...' : 'Sign in'}
+            {isSubmitting ? 'Входим...' : 'Войти'}
           </button>
         </form>
       </div>
     </div>
   )
+}
+
+function getAuthErrorMessage(message: string) {
+  if (message.toLowerCase().includes('invalid login credentials')) {
+    return 'Неверный email или пароль.'
+  }
+
+  if (message.toLowerCase().includes('email not confirmed')) {
+    return 'Email еще не подтвержден в Supabase.'
+  }
+
+  if (message.toLowerCase().includes('missing supabase env vars')) {
+    return 'Не настроены переменные окружения Supabase.'
+  }
+
+  return message
 }
 
 function QuestionsGate({
