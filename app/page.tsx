@@ -101,68 +101,64 @@ export default function Page() {
           ) : null}
         </div>
 
-        {isLoadingAuth ? (
-          <div className="min-h-[420px] flex items-center justify-center text-white/60 text-sm tracking-[0.3em] uppercase">
-            Checking session...
-          </div>
-        ) : !isAuthenticated ? (
-          <LoginCard supabaseError={supabaseError} />
-        ) : (
+        <div className="flex justify-center gap-4 mb-10">
+          <button onClick={() => setTab('counter')} className={`px-4 py-2 rounded-xl ${tab === 'counter' ? 'bg-white text-black' : 'bg-white/10'}`}>
+            Counter
+          </button>
+          <button onClick={() => setTab('questions')} className={`px-4 py-2 rounded-xl ${tab === 'questions' ? 'bg-white text-black' : 'bg-white/10'}`}>
+            Questions
+          </button>
+        </div>
+
+        {tab === 'counter' && (
           <>
-            <div className="flex justify-center gap-4 mb-10">
-              <button onClick={() => setTab('counter')} className={`px-4 py-2 rounded-xl ${tab === 'counter' ? 'bg-white text-black' : 'bg-white/10'}`}>
-                Counter
-              </button>
-              <button onClick={() => setTab('questions')} className={`px-4 py-2 rounded-xl ${tab === 'questions' ? 'bg-white text-black' : 'bg-white/10'}`}>
-                Questions
-              </button>
+            <h1 className="text-4xl md:text-6xl mb-10 font-medium tracking-wide">
+              Until We&apos;re Together
+            </h1>
+
+            <p className="text-white/40 mb-16 text-sm md:text-base">
+              counting the moments
+            </p>
+
+            <div className="mt-24 flex justify-center mb-20">
+              <div className="group flex items-end relative">
+
+                <img src="/m4.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[-10deg] z-10 group-hover:translate-x-[-140px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-50" alt="" />
+
+                <img src="/mi.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[-7deg] z-20 group-hover:translate-x-[-105px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-50" alt="" />
+
+                <img src="/m2.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[-4deg] z-30 group-hover:translate-x-[-70px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-50" alt="" />
+
+                <img src="/m3.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[-2deg] z-40 group-hover:translate-x-[-35px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-50" alt="" />
+
+                <img src="/lift_ept.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[0deg] z-50 hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-[100]" alt="" />
+
+                <img src="/m5.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[2deg] z-40 group-hover:translate-x-[35px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-[100]" alt="" />
+
+                <img src="/m6.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[4deg] z-30 group-hover:translate-x-[70px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-[100]" alt="" />
+
+                <img src="/m7.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[7deg] z-20 group-hover:translate-x-[105px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-[100]" alt="" />
+
+                <img src="/m8.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl rotate-[10deg] z-10 group-hover:translate-x-[140px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-[100]" alt="" />
+
+              </div>
             </div>
 
-            {tab === 'counter' && (
-              <>
-                <h1 className="text-4xl md:text-6xl mb-10 font-medium tracking-wide">
-                  Until We&apos;re Together
-                </h1>
-
-                <p className="text-white/40 mb-16 text-sm md:text-base">
-                  counting the moments
-                </p>
-
-                <div className="mt-24 flex justify-center mb-20">
-                  <div className="group flex items-end relative">
-
-                    <img src="/m4.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[-10deg] z-10 group-hover:translate-x-[-140px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-50" alt="" />
-
-                    <img src="/mi.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[-7deg] z-20 group-hover:translate-x-[-105px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-50" alt="" />
-
-                    <img src="/m2.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[-4deg] z-30 group-hover:translate-x-[-70px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-50" alt="" />
-
-                    <img src="/m3.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[-2deg] z-40 group-hover:translate-x-[-35px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-50" alt="" />
-
-                    <img src="/lift_ept.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[0deg] z-50 hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-[100]" alt="" />
-
-                    <img src="/m5.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[2deg] z-40 group-hover:translate-x-[35px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-[100]" alt="" />
-
-                    <img src="/m6.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[4deg] z-30 group-hover:translate-x-[70px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-[100]" alt="" />
-
-                    <img src="/m7.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[7deg] z-20 group-hover:translate-x-[105px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-[100]" alt="" />
-
-                    <img src="/m8.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl rotate-[10deg] z-10 group-hover:translate-x-[140px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-[100]" alt="" />
-
-                  </div>
-                </div>
-
-                <div className="flex justify-center gap-6 sm:gap-8 md:gap-12 lg:gap-16 px-4">
-                  <Box value={time.days} label="DAYS" />
-                  <Box value={time.hours} label="HOURS" />
-                  <Box value={time.minutes} label="MIN" />
-                  <Box value={time.seconds} label="SEC" />
-                </div>
-              </>
-            )}
-
-            {tab === 'questions' && <Question />}
+            <div className="flex justify-center gap-6 sm:gap-8 md:gap-12 lg:gap-16 px-4">
+              <Box value={time.days} label="DAYS" />
+              <Box value={time.hours} label="HOURS" />
+              <Box value={time.minutes} label="MIN" />
+              <Box value={time.seconds} label="SEC" />
+            </div>
           </>
+        )}
+
+        {tab === 'questions' && (
+          <QuestionsGate
+            isLoadingAuth={isLoadingAuth}
+            isAuthenticated={isAuthenticated}
+            supabaseError={supabaseError}
+          />
         )}
       </div>
     </main>
@@ -300,6 +296,30 @@ function LoginCard({ supabaseError }: { supabaseError: string }) {
       </div>
     </div>
   )
+}
+
+function QuestionsGate({
+  isLoadingAuth,
+  isAuthenticated,
+  supabaseError,
+}: {
+  isLoadingAuth: boolean
+  isAuthenticated: boolean
+  supabaseError: string
+}) {
+  if (isLoadingAuth) {
+    return (
+      <div className="min-h-[420px] flex items-center justify-center text-white/60 text-sm tracking-[0.3em] uppercase">
+        Проверяем сессию...
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return <LoginCard supabaseError={supabaseError} />
+  }
+
+  return <Question />
 }
 
 function Question() {
