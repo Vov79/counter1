@@ -123,23 +123,23 @@ export default function Page() {
             <div className="mt-24 flex justify-center mb-20">
               <div className="group flex items-end relative">
 
-                <img src="/m4.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[-10deg] z-10 group-hover:translate-x-[-140px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-50" alt="" />
+                <img src="/m4.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[-10deg] z-10 transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)] will-change-transform group-hover:translate-x-[-140px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-50 hover:shadow-[0_28px_90px_rgba(0,0,0,0.45)]" alt="" />
 
-                <img src="/mi.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[-7deg] z-20 group-hover:translate-x-[-105px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-50" alt="" />
+                <img src="/mi.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[-7deg] z-20 transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)] will-change-transform group-hover:translate-x-[-105px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-50 hover:shadow-[0_28px_90px_rgba(0,0,0,0.45)]" alt="" />
 
-                <img src="/m2.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[-4deg] z-30 group-hover:translate-x-[-70px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-50" alt="" />
+                <img src="/m2.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[-4deg] z-30 transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)] will-change-transform group-hover:translate-x-[-70px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-50 hover:shadow-[0_28px_90px_rgba(0,0,0,0.45)]" alt="" />
 
-                <img src="/m3.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[-2deg] z-40 group-hover:translate-x-[-35px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-50" alt="" />
+                <img src="/m3.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[-2deg] z-40 transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)] will-change-transform group-hover:translate-x-[-35px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-50 hover:shadow-[0_28px_90px_rgba(0,0,0,0.45)]" alt="" />
 
-                <img src="/lift_ept.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[0deg] z-50 hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-[100]" alt="" />
+                <img src="/lift_ept.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[0deg] z-50 transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)] will-change-transform hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-[100] hover:shadow-[0_28px_90px_rgba(0,0,0,0.45)]" alt="" />
 
-                <img src="/m5.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[2deg] z-40 group-hover:translate-x-[35px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-[100]" alt="" />
+                <img src="/m5.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[2deg] z-40 transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)] will-change-transform group-hover:translate-x-[35px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-[100] hover:shadow-[0_28px_90px_rgba(0,0,0,0.45)]" alt="" />
 
-                <img src="/m6.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[4deg] z-30 group-hover:translate-x-[70px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-[100]" alt="" />
+                <img src="/m6.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[4deg] z-30 transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)] will-change-transform group-hover:translate-x-[70px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-[100] hover:shadow-[0_28px_90px_rgba(0,0,0,0.45)]" alt="" />
 
-                <img src="/m7.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[7deg] z-20 group-hover:translate-x-[105px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-[100]" alt="" />
+                <img src="/m7.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[7deg] z-20 transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)] will-change-transform group-hover:translate-x-[105px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-[100] hover:shadow-[0_28px_90px_rgba(0,0,0,0.45)]" alt="" />
 
-                <img src="/m8.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl rotate-[10deg] z-10 group-hover:translate-x-[140px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-[100]" alt="" />
+                <img src="/m8.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl rotate-[10deg] z-10 transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)] will-change-transform group-hover:translate-x-[140px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-[100] hover:shadow-[0_28px_90px_rgba(0,0,0,0.45)]" alt="" />
 
               </div>
             </div>
