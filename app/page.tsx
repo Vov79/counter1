@@ -339,19 +339,74 @@ function QuestionsGate({
 }
 
 function Question() {
-  const questions = [
-    "Когда тебе со мной спокойно?",
-    "Что тебе нравится в нас?",
-    "Когда ты скучаешь по мне?",
-    "Что ты хочешь от нас дальше?"
-  ]
-
+  const [questions, setQuestions] = useState<string[]>([])
+  const [isLoadingQuestions, setIsLoadingQuestions] = useState(true)
+  const [questionsError, setQuestionsError] = useState('')
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState<string[]>([])
+
+  useEffect(() => {
+    let isMounted = true
+
+    const loadQuestions = async () => {
+      const { data, error } = await getSupabaseClient()
+        .from('Questions')
+        .select('question')
+        .order('id', { ascending: true })
+
+      if (!isMounted) {
+        return
+      }
+
+      if (error) {
+        setQuestionsError(getQuestionsErrorMessage(error.message))
+        setIsLoadingQuestions(false)
+        return
+      }
+
+      const loadedQuestions = (data ?? [])
+        .map((item) => item.question?.trim())
+        .filter((item): item is string => Boolean(item))
+
+      setQuestions(loadedQuestions)
+      setQuestionsError('')
+      setIsLoadingQuestions(false)
+    }
+
+    loadQuestions()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const next = (value: string) => {
     setAnswers(prev => [...prev, value])
     setStep(s => s + 1)
+  }
+
+  if (isLoadingQuestions) {
+    return (
+      <div className="text-center text-white/60">
+        Загружаем вопросы...
+      </div>
+    )
+  }
+
+  if (questionsError) {
+    return (
+      <div className="max-w-xl mx-auto text-left rounded-3xl border border-red-300/20 bg-red-400/10 p-6 text-red-100">
+        {questionsError}
+      </div>
+    )
+  }
+
+  if (questions.length === 0) {
+    return (
+      <div className="text-center text-white/60">
+        В таблице `Questions` пока нет вопросов.
+      </div>
+    )
   }
 
   if (step >= questions.length) {
@@ -385,4 +440,18 @@ function Question() {
       </button>
     </div>
   )
+}
+
+function getQuestionsErrorMessage(message: string) {
+  const normalizedMessage = message.toLowerCase()
+
+  if (normalizedMessage.includes('permission denied') || normalizedMessage.includes('row-level security')) {
+    return 'Нет доступа к таблице Questions. Проверь RLS policy на SELECT для авторизованных пользователей.'
+  }
+
+  if (normalizedMessage.includes('relation') && normalizedMessage.includes('does not exist')) {
+    return 'Таблица Questions не найдена в Supabase.'
+  }
+
+  return `Не удалось загрузить вопросы: ${message}`
 }
