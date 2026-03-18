@@ -31,6 +31,11 @@ type QuestionRecord = {
   question: string
 }
 
+type QuestionRow = {
+  id: number
+  question: string | null
+}
+
 type AnswerDraft = {
   text?: string
   choice?: string
@@ -38,6 +43,16 @@ type AnswerDraft = {
   file?: File
   blob?: Blob
   previewUrl?: string
+}
+
+type AnswerInsertRow = {
+  user_id: string
+  question_id: number
+  answer_kind: string
+  answer_text: string | null
+  answer_choice: string | null
+  answer_number: number | null
+  file_path: string | null
 }
 
 export default function Page() {
@@ -402,7 +417,9 @@ function Question() {
         return
       }
 
-      const loadedQuestions = (data ?? [])
+      const rows = (data ?? []) as QuestionRow[]
+
+      const loadedQuestions = rows
         .filter((item) => QUESTION_RULES[item.id])
         .map((item) => ({
           id: item.id,
@@ -901,7 +918,7 @@ async function submitAnswers({
       throw new Error('Не удалось определить текущего пользователя.')
     }
 
-    const rows = []
+    const rows: AnswerInsertRow[] = []
 
     for (const question of questions) {
       const rule = QUESTION_RULES[question.id]
@@ -973,7 +990,7 @@ async function submitAnswers({
       })
     }
 
-    const { error } = await client.from('Answers').upsert(rows, {
+    const { error } = await client.from('Answers').upsert(rows as unknown as never[], {
       onConflict: 'user_id,question_id',
     })
 
