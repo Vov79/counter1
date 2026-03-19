@@ -285,6 +285,7 @@ function LoginCard({ supabaseError }: { supabaseError: string }) {
   const [password, setPassword] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [failedAttempts, setFailedAttempts] = useState(0)
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -307,6 +308,7 @@ function LoginCard({ supabaseError }: { supabaseError: string }) {
 
     if (error) {
       setErrorMessage(getAuthErrorMessage(error.message))
+      setFailedAttempts((prev) => prev + 1)
     }
 
     setIsSubmitting(false)
@@ -320,11 +322,33 @@ function LoginCard({ supabaseError }: { supabaseError: string }) {
         </p>
 
         <h1 className="text-3xl md:text-4xl font-medium mb-3">
-          Войди, чтобы открыть вопросы
+          Любимая, попробуй угадать логин и пароль
         </h1>
+
+        <p className="text-white/55 mb-8">
+          Когда получится, откроется доступ к вопросам.
+        </p>
 
         {supabaseError ? (
           <p className="text-sm text-amber-200 mb-4">{supabaseError}</p>
+        ) : null}
+
+        {failedAttempts >= 1 ? (
+          <p className="text-sm text-pink-200/90 mb-3">
+            Подскажу с логином немного, `*****.**@gmail.com` - что-то связанное с первой встречей
+          </p>
+        ) : null}
+
+        {failedAttempts >= 2 ? (
+          <p className="text-sm text-pink-200/90 mb-3">
+            Ну ладно) пароль - когда мы встретились
+          </p>
+        ) : null}
+
+        {failedAttempts >= 3 ? (
+          <p className="text-sm text-pink-200/90 mb-4">
+            Еще немного помогу) формат пароля `**.**.**`
+          </p>
         ) : null}
 
         <form className="space-y-4" onSubmit={handleSubmit}>
