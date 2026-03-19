@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import { getSupabaseClient } from '@/lib/supabase/client'
 
 const TARGET_DATE = new Date('2026-03-21T08:00:00')
+const GIRL_EMAIL = 'nekto.me@gmail.com'
+const BOY_EMAIL = 'iancovoi.vladimir@gmail.com'
 
 const QUESTION_RULES: Record<number, QuestionRule> = {
   1: { kind: 'text' },
@@ -16,7 +18,8 @@ const QUESTION_RULES: Record<number, QuestionRule> = {
   8: { kind: 'number-choice', options: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'] },
   9: { kind: 'voice' },
   10: { kind: 'single-choice', options: ['поцеловать', 'обнять', 'укусить'] },
-  12: { kind: 'single-choice', options: ['такое', 'под рево пойдет', 'пиздец как'] },
+  12: { kind: 'text' },
+  13: { kind: 'single-choice', options: ['посквончить кайф', 'под рево пойдет', 'пиздец как'] },
 }
 
 type QuestionKind = 'text' | 'drawing' | 'photo' | 'info' | 'number-choice' | 'voice' | 'single-choice'
@@ -47,12 +50,30 @@ type AnswerDraft = {
 
 type AnswerInsertRow = {
   user_id: string
+  user_email: string
   question_id: number
   answer_kind: string
   answer_text: string | null
   answer_choice: string | null
   answer_number: number | null
   file_path: string | null
+}
+
+type PartnerAnswerRow = {
+  question_id: number
+  answer_kind: 'text' | 'drawing' | 'photo' | 'number_choice' | 'voice' | 'single_choice'
+  answer_text: string | null
+  answer_choice: string | null
+  answer_number: number | null
+  file_path: string | null
+}
+
+type PartnerAnswerView = {
+  questionId: number
+  question: string
+  answerKind: PartnerAnswerRow['answer_kind']
+  textValue: string
+  fileUrl: string | null
 }
 
 export default function Page() {
@@ -302,10 +323,6 @@ function LoginCard({ supabaseError }: { supabaseError: string }) {
           Войди, чтобы открыть вопросы
         </h1>
 
-        <p className="text-white/55 mb-8">
-          Введи email и пароль пользователя из Supabase Auth.
-        </p>
-
         {supabaseError ? (
           <p className="text-sm text-amber-200 mb-4">{supabaseError}</p>
         ) : null}
@@ -396,16 +413,24 @@ function Question() {
   const [answers, setAnswers] = useState<Record<number, AnswerDraft>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
-  const [isSubmitted, setIsSubmitted] = useState(false)
+  const [hasSubmittedAnswers, setHasSubmittedAnswers] = useState(false)
+  const [currentUserEmail, setCurrentUserEmail] = useState('')
+  const [partnerAnswers, setPartnerAnswers] = useState<PartnerAnswerView[]>([])
+  const [isLoadingPartnerAnswers, setIsLoadingPartnerAnswers] = useState(false)
+  const [partnerAnswersError, setPartnerAnswersError] = useState('')
+  const [showPartnerAnswers, setShowPartnerAnswers] = useState(false)
 
   useEffect(() => {
     let isMounted = true
 
     const loadQuestions = async () => {
-      const { data, error } = await getSupabaseClient()
-        .from('Questions')
-        .select('id, question')
-        .order('id', { ascending: true })
+      const client = getSupabaseClient()
+      const [{ data, error }, userResult] = await Promise.all([
+        client.from('Questions')
+          .select('id, question')
+          .order('id', { ascending: true }),
+        client.auth.getUser(),
+      ])
 
       if (!isMounted) {
         return
@@ -430,6 +455,22 @@ function Question() {
       setQuestions(loadedQuestions)
       setQuestionsError('')
       setIsLoadingQuestions(false)
+
+      const user = userResult.data.user
+      const userEmail = user?.email ?? ''
+      setCurrentUserEmail(userEmail)
+
+      if (user?.id) {
+        const submittedFlag = window.localStorage.getItem(`answers-submitted:${user.id}`)
+        const { count } = await client
+          .from('Answers')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+
+        if (submittedFlag === 'true' || (count ?? 0) > 0) {
+          setHasSubmittedAnswers(true)
+        }
+      }
     }
 
     loadQuestions()
@@ -443,6 +484,18 @@ function Question() {
   const currentRule = currentQuestion ? QUESTION_RULES[currentQuestion.id] : null
   const currentAnswer = currentQuestion ? answers[currentQuestion.id] : undefined
   const isLastStep = step === questions.length - 1
+  const partnerEmail = currentUserEmail === GIRL_EMAIL ? BOY_EMAIL : currentUserEmail === BOY_EMAIL ? GIRL_EMAIL : ''
+  const partnerButtonLabel = currentUserEmail === GIRL_EMAIL
+    ? 'Показать ответы любимого'
+    : currentUserEmail === BOY_EMAIL
+      ? 'Показать ответы любимой'
+      : 'Показать ответы любимого человека'
+
+  const submittedDescription = currentUserEmail === GIRL_EMAIL
+    ? 'Теперь можно посмотреть ответы любимого.'
+    : currentUserEmail === BOY_EMAIL
+      ? 'Теперь можно посмотреть ответы любимой.'
+      : 'Теперь можно посмотреть ответы любимого человека.'
 
   if (isLoadingQuestions) {
     return (
@@ -468,9 +521,9 @@ function Question() {
     )
   }
 
-  if (isSubmitted || !currentQuestion || !currentRule) {
+  if (hasSubmittedAnswers || !currentQuestion || !currentRule) {
     return (
-      <div className="max-w-2xl mx-auto text-center">
+      <div className="max-w-3xl mx-auto text-left">
         <div className="rounded-[32px] border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl p-8 md:p-10">
           <p className="text-white/50 text-xs tracking-[0.35em] uppercase mb-4">
             Готово
@@ -480,9 +533,59 @@ function Question() {
             Ответы отправлены
           </h2>
 
-          <p className="text-white/60 text-base md:text-lg">
-            Я сохранил их в Supabase для текущего пользователя.
+          <p className="text-white/60 text-base md:text-lg mb-8">
+            {submittedDescription}
           </p>
+
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => void loadPartnerAnswers({
+                partnerEmail,
+                questions,
+                setPartnerAnswers,
+                setIsLoadingPartnerAnswers,
+                setPartnerAnswersError,
+                setShowPartnerAnswers,
+              })}
+              className="px-5 py-3 rounded-2xl bg-white text-black font-medium disabled:opacity-50"
+              disabled={!partnerEmail || isLoadingPartnerAnswers}
+            >
+              {isLoadingPartnerAnswers ? 'Загружаем...' : partnerButtonLabel}
+            </button>
+          </div>
+
+          {partnerAnswersError ? (
+            <p className="text-red-300 mt-6">{partnerAnswersError}</p>
+          ) : null}
+
+          {showPartnerAnswers && partnerAnswers.length === 0 ? (
+            <p className="text-white/60 mt-6">У второго пользователя пока нет ответов.</p>
+          ) : null}
+
+          {showPartnerAnswers && partnerAnswers.length > 0 ? (
+            <div className="mt-8 space-y-6">
+              {partnerAnswers.map((item) => (
+                <div key={item.questionId} className="rounded-3xl border border-white/10 bg-white/5 p-5">
+                  <p className="text-white/50 text-sm mb-2">Вопрос #{item.questionId}</p>
+                  <h3 className="text-xl mb-4">{item.question}</h3>
+
+                  {item.answerKind === 'voice' && item.fileUrl ? (
+                    <audio controls className="w-full">
+                      <source src={item.fileUrl} />
+                    </audio>
+                  ) : null}
+
+                  {(item.answerKind === 'drawing' || item.answerKind === 'photo') && item.fileUrl ? (
+                    <img src={item.fileUrl} alt="" className="max-h-[420px] rounded-2xl border border-white/10" />
+                  ) : null}
+
+                  {!item.fileUrl ? (
+                    <p className="text-white text-lg">{item.textValue}</p>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          ) : null}
         </div>
       </div>
     )
@@ -542,7 +645,7 @@ function Question() {
                   answers,
                   setSubmitError,
                   setIsSubmitting,
-                  setIsSubmitted,
+                  setHasSubmittedAnswers,
                 })
                 return
               }
@@ -899,13 +1002,13 @@ async function submitAnswers({
   answers,
   setSubmitError,
   setIsSubmitting,
-  setIsSubmitted,
+  setHasSubmittedAnswers,
 }: {
   questions: QuestionRecord[]
   answers: Record<number, AnswerDraft>
   setSubmitError: (value: string) => void
   setIsSubmitting: (value: boolean) => void
-  setIsSubmitted: (value: boolean) => void
+  setHasSubmittedAnswers: (value: boolean) => void
 }) {
   setIsSubmitting(true)
   setSubmitError('')
@@ -936,6 +1039,7 @@ async function submitAnswers({
       if (rule.kind === 'text') {
         rows.push({
           user_id: userResult.user.id,
+          user_email: userResult.user.email ?? '',
           question_id: question.id,
           answer_kind: 'text',
           answer_text: answer?.text?.trim() ?? '',
@@ -949,6 +1053,7 @@ async function submitAnswers({
       if (rule.kind === 'number-choice') {
         rows.push({
           user_id: userResult.user.id,
+          user_email: userResult.user.email ?? '',
           question_id: question.id,
           answer_kind: 'number_choice',
           answer_text: null,
@@ -962,6 +1067,7 @@ async function submitAnswers({
       if (rule.kind === 'single-choice') {
         rows.push({
           user_id: userResult.user.id,
+          user_email: userResult.user.email ?? '',
           question_id: question.id,
           answer_kind: 'single_choice',
           answer_text: null,
@@ -981,6 +1087,7 @@ async function submitAnswers({
 
       rows.push({
         user_id: userResult.user.id,
+        user_email: userResult.user.email ?? '',
         question_id: question.id,
         answer_kind: upload.answerKind,
         answer_text: null,
@@ -998,7 +1105,8 @@ async function submitAnswers({
       throw new Error(getSubmitErrorMessage(error.message))
     }
 
-    setIsSubmitted(true)
+    window.localStorage.setItem(`answers-submitted:${userResult.user.id}`, 'true')
+    setHasSubmittedAnswers(true)
   } catch (error) {
     setSubmitError(error instanceof Error ? error.message : 'Не удалось сохранить ответы.')
   } finally {
@@ -1082,11 +1190,99 @@ function getSubmitErrorMessage(message: string) {
     return 'RLS policy не дает сохранить ответы в таблицу Answers.'
   }
 
+  if (normalizedMessage.includes('user_email')) {
+    return 'В таблице Answers не хватает колонки user_email.'
+  }
+
   if (normalizedMessage.includes('no unique') || normalizedMessage.includes('constraint')) {
     return 'Для upsert в Answers нужен уникальный индекс по user_id и question_id.'
   }
 
   return `Не удалось сохранить ответы: ${message}`
+}
+
+async function loadPartnerAnswers({
+  partnerEmail,
+  questions,
+  setPartnerAnswers,
+  setIsLoadingPartnerAnswers,
+  setPartnerAnswersError,
+  setShowPartnerAnswers,
+}: {
+  partnerEmail: string
+  questions: QuestionRecord[]
+  setPartnerAnswers: (value: PartnerAnswerView[]) => void
+  setIsLoadingPartnerAnswers: (value: boolean) => void
+  setPartnerAnswersError: (value: string) => void
+  setShowPartnerAnswers: (value: boolean) => void
+}) {
+  if (!partnerEmail) {
+    setPartnerAnswersError('Для этого аккаунта не настроен второй пользователь.')
+    return
+  }
+
+  setIsLoadingPartnerAnswers(true)
+  setPartnerAnswersError('')
+
+  try {
+    const { data, error } = await getSupabaseClient()
+      .from('Answers')
+      .select('question_id, answer_kind, answer_text, answer_choice, answer_number, file_path')
+      .eq('user_email', partnerEmail)
+      .order('question_id', { ascending: true })
+
+    if (error) {
+      throw new Error(getPartnerAnswersErrorMessage(error.message))
+    }
+
+    const questionMap = new Map(questions.map((question) => [question.id, question.question]))
+    const rows = (data ?? []) as PartnerAnswerRow[]
+    const resolvedAnswers = await Promise.all(rows.map(async (row) => ({
+      questionId: row.question_id,
+      question: questionMap.get(row.question_id) ?? `Вопрос #${row.question_id}`,
+      answerKind: row.answer_kind,
+      textValue: row.answer_text ?? row.answer_choice ?? (row.answer_number !== null ? String(row.answer_number) : ''),
+      fileUrl: row.file_path ? await createSignedFileUrl(row.file_path) : null,
+    })))
+
+    setPartnerAnswers(resolvedAnswers)
+    setShowPartnerAnswers(true)
+  } catch (error) {
+    setPartnerAnswersError(error instanceof Error ? error.message : 'Не удалось загрузить ответы второго юзера.')
+  } finally {
+    setIsLoadingPartnerAnswers(false)
+  }
+}
+
+async function createSignedFileUrl(storagePath: string) {
+  const slashIndex = storagePath.indexOf('/')
+  if (slashIndex === -1) {
+    return null
+  }
+
+  const bucket = storagePath.slice(0, slashIndex)
+  const filePath = storagePath.slice(slashIndex + 1)
+  const { data, error } = await getSupabaseClient().storage.from(bucket).createSignedUrl(filePath, 3600)
+
+  if (error) {
+    throw new Error(`Не удалось открыть файл ответа: ${error.message}`)
+  }
+
+  return data.signedUrl
+}
+
+function getPartnerAnswersErrorMessage(message: string) {
+  const normalizedMessage = message.toLowerCase()
+
+  if (normalizedMessage.includes('row-level security')) {
+    return 'RLS policy не дает читать ответы второго юзера.'
+  }
+
+  if (normalizedMessage.includes('user_email')) {
+    return 'В таблице Answers не хватает колонки user_email для поиска ответов второго юзера.'
+  }
+
+  return `Не удалось загрузить ответы второго юзера: ${message}`
 }
 
 function getQuestionsErrorMessage(message: string) {
