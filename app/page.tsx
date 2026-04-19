@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { getSupabaseClient } from '@/lib/supabase/client'
 
-const TARGET_DATE = new Date('2026-03-21T08:00:00')
+const TARGET_DATE: Date | null = null
 const GIRL_EMAIL = 'nekto.me@gmail.com'
 const BOY_EMAIL = 'iancovoi.vladimir@gmail.com'
 
@@ -21,6 +21,50 @@ const QUESTION_RULES: Record<number, QuestionRule> = {
   12: { kind: 'text' },
   13: { kind: 'single-choice', options: ['посквончить кайф', 'под рево пойдет', 'пиздец как'] },
 }
+
+const DECEMBER_PHOTOS = [
+  '/m4.jpg',
+  '/mi.jpg',
+  '/m2.jpg',
+  '/m3.jpg',
+  '/lift_ept.jpg',
+  '/m5.jpg',
+  '/m6.jpg',
+  '/m7.jpg',
+  '/m8.jpg',
+]
+
+const SPRING_PHOTOS = [
+  '/march/0.jpg',
+  '/march/1.jpg',
+  '/march/2.jpg',
+  '/march/3.jpg',
+  '/march/4.jpg',
+  '/march/5.jpg',
+  '/march/6.jpg',
+  '/march/7.jpg',
+  '/march/8.jpg',
+  '/march/9.jpg',
+  '/march/10.jpg',
+  '/march/11.jpg',
+  '/march/12.jpg',
+]
+
+const SPRING_PHOTO_DESCRIPTIONS = [
+  'Я ОЧЕНЬ ХОТЕЛ ТЕБЯ ПОЦЕЛОВАТЬ, НО САМОМ ДЕЛЕ МАНИЛ ЗАПАХ ТВОИХ ВОЛОС',
+  'ну тут самая пиздатая пара 2к17, идеально просто смотримся',
+  'заброшенный завод, железнодорожные пути, люди нам из поезда еще махали ахах помнишь?',
+  'мы искали несколько дней, хотели и НАШЛИ ВАТУ НАКОНЕЦ-ТО',
+  'побаловались немного. у нее красивые глаза...',
+  'вайб весны, никак иначе',
+  'ОЙ, а тут ты приготовила нам поесть, фирменная шаверма с термя паштетами. РЕАЛЬНО ВКУСНО БЫЛО',
+  'без бога никуда, в отношениях нужен свет',
+  'ЛЮДИШКИ ТАКИМИ СМЕШНЫМИ КАЗАЛИСЬ, НЕ ВИДЕЛИ НАС ПОКА МЫ ДУРАЧИЛИСЬ НА КРЫШЕ',
+  'тут без комментариев - стиль наше все с тобой',
+  'КАК ЖЕ ВКУУУСНО БЫЛО, ЕЩЕ ПИВО НАУЧИЛИСЬ ОТКРЫВАТЬ ОБ РЕЛЬСЫ',
+  'первый раз напились вместе, КАК ТЫ СМЕШНО КРИЧАЛА КОГДА Я ВКЛЮЧИЛ ВОДУ))',
+  'тут мы разбазаривали цешечку, (штаны круто сидели на твоей талии)',
+]
 
 type QuestionKind = 'text' | 'drawing' | 'photo' | 'info' | 'number-choice' | 'voice' | 'single-choice'
 
@@ -191,35 +235,27 @@ export default function Page() {
               counting the moments
             </p>
 
-            <div className="mt-24 flex justify-center mb-20">
-              <div className="group flex items-end relative">
+            <CountdownSection time={time} hasTargetDate={Boolean(TARGET_DATE)} />
 
-                <img src="/m4.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[-10deg] z-10 transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)] will-change-transform group-hover:translate-x-[-140px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-50 hover:shadow-[0_28px_90px_rgba(0,0,0,0.45)]" alt="" />
+            <div className="mt-20 mb-20 space-y-8">
+              <MemoryChapter
+                eyebrow="26-30 декабря"
+                title="НАША ПЕРВАЯ ВСТРЕЧА В КИЕВЕ"
+                description="Мы ооочень стеснялись, но нас тянуло друг к другу
+                "
+                photos={DECEMBER_PHOTOS}
+                accent="from-pink-300/25 via-white/10 to-orange-200/20"
+              />
 
-                <img src="/mi.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[-7deg] z-20 transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)] will-change-transform group-hover:translate-x-[-105px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-50 hover:shadow-[0_28px_90px_rgba(0,0,0,0.45)]" alt="" />
-
-                <img src="/m2.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[-4deg] z-30 transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)] will-change-transform group-hover:translate-x-[-70px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-50 hover:shadow-[0_28px_90px_rgba(0,0,0,0.45)]" alt="" />
-
-                <img src="/m3.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[-2deg] z-40 transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)] will-change-transform group-hover:translate-x-[-35px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-50 hover:shadow-[0_28px_90px_rgba(0,0,0,0.45)]" alt="" />
-
-                <img src="/lift_ept.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[0deg] z-50 transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)] will-change-transform hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-[100] hover:shadow-[0_28px_90px_rgba(0,0,0,0.45)]" alt="" />
-
-                <img src="/m5.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[2deg] z-40 transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)] will-change-transform group-hover:translate-x-[35px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-[100] hover:shadow-[0_28px_90px_rgba(0,0,0,0.45)]" alt="" />
-
-                <img src="/m6.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[4deg] z-30 transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)] will-change-transform group-hover:translate-x-[70px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-[100] hover:shadow-[0_28px_90px_rgba(0,0,0,0.45)]" alt="" />
-
-                <img src="/m7.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl -mr-16 rotate-[7deg] z-20 transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)] will-change-transform group-hover:translate-x-[105px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-[100] hover:shadow-[0_28px_90px_rgba(0,0,0,0.45)]" alt="" />
-
-                <img src="/m8.jpg" className="w-[210px] h-[270px] object-cover rounded-2xl shadow-2xl rotate-[10deg] z-10 transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)] will-change-transform group-hover:translate-x-[140px] hover:scale-[1.35] hover:-translate-y-14 hover:rotate-0 hover:z-[100] hover:shadow-[0_28px_90px_rgba(0,0,0,0.45)]" alt="" />
-
-              </div>
-            </div>
-
-            <div className="flex justify-center gap-6 sm:gap-8 md:gap-12 lg:gap-16 px-4">
-              <Box value={time.days} label="DAYS" />
-              <Box value={time.hours} label="HOURS" />
-              <Box value={time.minutes} label="MIN" />
-              <Box value={time.seconds} label="SEC" />
+              <MemoryChapter
+                eyebrow="21 марта - 15 апреля"
+                title="НАША ВТОРАЯ ВСТРЕЧА В ЗАПОРОЖЬЕ"
+                description="еще никогда не были так близки... поняли, что любим друг друга по-настоящему.."
+                photos={SPRING_PHOTOS}
+                photoDescriptions={SPRING_PHOTO_DESCRIPTIONS}
+                accent="from-sky-300/20 via-white/10 to-lime-200/20"
+                interactive
+              />
             </div>
           </>
         )}
@@ -236,7 +272,11 @@ export default function Page() {
   )
 }
 
-function getTime(target: Date) {
+function getTime(target: Date | null) {
+  if (!target) {
+    return { days: 0, hours: 0, minutes: 0, seconds: 0 }
+  }
+
   const now = new Date()
   const diff = target.getTime() - now.getTime()
 
@@ -256,6 +296,47 @@ function getSupabaseConfigError() {
   }
 
   return ''
+}
+
+function CountdownSection({
+  time,
+  hasTargetDate,
+}: {
+  time: ReturnType<typeof getTime>
+  hasTargetDate: boolean
+}) {
+  return (
+    <section className="mx-auto mb-20 max-w-5xl rounded-[36px] border border-white/10 bg-white/[0.045] p-6 md:p-8 shadow-2xl backdrop-blur">
+      <p className="text-white/45 text-xs tracking-[0.35em] uppercase mb-4">
+        Next time
+      </p>
+
+      {hasTargetDate ? (
+        <>
+          <h2 className="text-3xl md:text-5xl font-semibold mb-8">
+            Until we meet again
+          </h2>
+
+          <div className="flex justify-center gap-6 sm:gap-8 md:gap-12 lg:gap-16 px-4">
+            <Box value={time.days} label="DAYS" />
+            <Box value={time.hours} label="HOURS" />
+            <Box value={time.minutes} label="MIN" />
+            <Box value={time.seconds} label="SEC" />
+          </div>
+        </>
+      ) : (
+        <div className="py-8">
+          <h2 className="text-3xl md:text-6xl font-semibold leading-tight">
+            The next date will be set soon
+          </h2>
+
+          <p className="mt-5 text-white/55 text-base md:text-lg">
+            waiting for the moment we choose it together
+          </p>
+        </div>
+      )}
+    </section>
+  )
 }
 
 function Box({ value, label }: { value: number; label: string }) {
@@ -280,12 +361,142 @@ function Box({ value, label }: { value: number; label: string }) {
   )
 }
 
+function MemoryChapter({
+  eyebrow,
+  title,
+  description,
+  photos,
+  photoDescriptions,
+  accent,
+  interactive = false,
+}: {
+  eyebrow: string
+  title: string
+  description: string
+  photos: string[]
+  photoDescriptions?: string[]
+  accent: string
+  interactive?: boolean
+}) {
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0)
+  const [isPopupOpen, setIsPopupOpen] = useState(false)
+  const selectedDescription = photoDescriptions?.[selectedPhotoIndex]
+  const selectedPhoto = photos[selectedPhotoIndex]
+
+  return (
+    <section className="group/chapter relative overflow-hidden rounded-[36px] border border-white/10 bg-white/[0.045] p-5 md:p-7 text-left shadow-2xl">
+      <div className={`absolute inset-0 bg-gradient-to-br ${accent} opacity-70`} />
+      <div className="absolute -right-24 -top-24 h-56 w-56 rounded-full bg-white/20 blur-[90px] transition duration-700 group-hover/chapter:scale-125" />
+
+      <div className="relative grid gap-7 lg:grid-cols-[0.85fr_1.6fr] lg:items-stretch">
+        <div className="flex min-h-[360px] flex-col justify-between rounded-[28px] border border-white/10 bg-black/20 p-6">
+          <div>
+            
+            <p className="text-white/45 text-xs tracking-[0.35em] uppercase mb-4">
+              {eyebrow}
+            </p>
+
+            <h2 className="text-3xl md:text-5xl font-semibold leading-tight mb-5">
+              {title}
+            </h2>
+
+            <p className="text-white/58 text-sm md:text-base max-w-md">
+              {description}
+            </p>
+          </div>
+
+          <div className="mt-10 h-px w-full bg-gradient-to-r from-white/35 via-white/10 to-transparent" />
+
+          <div className="mt-5 text-white/35 text-sm">
+           Продолжение следует...
+          </div>
+        </div>
+
+        <div>
+          <div className="grid grid-cols-10 auto-rows-[76px] md:auto-rows-[92px] gap-2.5">
+            {photos.map((photo, index) => {
+              const featureClass = index === 0
+                ? 'col-span-5 row-span-4'
+                : index === 1
+                  ? 'col-span-3 row-span-2'
+                  : index === 2
+                    ? 'col-span-2 row-span-2'
+                    : index % 5 === 0
+                      ? 'col-span-4 row-span-2'
+                      : index % 3 === 0
+                        ? 'col-span-3 row-span-2'
+                        : 'col-span-2 row-span-2'
+
+              return (
+                <button
+                  key={photo}
+                  type="button"
+                  onClick={() => {
+                    if (interactive) {
+                      setSelectedPhotoIndex(index)
+                      setIsPopupOpen(true)
+                    }
+                  }}
+                  className={`${featureClass} min-h-0 text-left ${interactive ? 'cursor-pointer' : 'cursor-default'}`}
+                >
+                  <img
+                    src={photo}
+                    alt=""
+                    className="h-full w-full object-cover rounded-2xl border border-white/10 shadow-xl transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)] hover:scale-[1.045] hover:-translate-y-1 hover:z-20 hover:shadow-[0_24px_80px_rgba(0,0,0,0.48)]"
+                  />
+                </button>
+              )
+            })}
+          </div>
+
+          {interactive && selectedPhoto && isPopupOpen ? (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/75 px-4 py-8 backdrop-blur-md">
+              <button
+                type="button"
+                aria-label="Закрыть"
+                onClick={() => setIsPopupOpen(false)}
+                className="absolute inset-0 cursor-default"
+              />
+
+              <div className="relative w-full max-w-4xl overflow-hidden rounded-[34px] border border-white/10 bg-[#09090d] shadow-[0_30px_120px_rgba(0,0,0,0.65)]">
+                <button
+                  type="button"
+                  onClick={() => setIsPopupOpen(false)}
+                  aria-label="Закрыть"
+                  className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-black/55 text-2xl leading-none text-white/80 backdrop-blur hover:bg-white hover:text-black transition"
+                >
+                  ×
+                </button>
+
+                <img
+                  src={selectedPhoto}
+                  alt=""
+                  className="max-h-[72vh] w-full object-contain bg-black"
+                />
+
+                <div className="p-6 md:p-8">
+                  <p className="text-white/40 text-xs tracking-[0.3em] uppercase mb-3">
+                    Фото {selectedPhotoIndex + 1}
+                  </p>
+
+                  <p className="text-white text-2xl md:text-3xl">
+                    {selectedDescription}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function LoginCard({ supabaseError }: { supabaseError: string }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [failedAttempts, setFailedAttempts] = useState(0)
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -308,7 +519,6 @@ function LoginCard({ supabaseError }: { supabaseError: string }) {
 
     if (error) {
       setErrorMessage(getAuthErrorMessage(error.message))
-      setFailedAttempts((prev) => prev + 1)
     }
 
     setIsSubmitting(false)
@@ -325,30 +535,8 @@ function LoginCard({ supabaseError }: { supabaseError: string }) {
           Любимая, попробуй угадать логин и пароль
         </h1>
 
-        <p className="text-white/55 mb-8">
-          Когда получится, откроется доступ к вопросам.
-        </p>
-
         {supabaseError ? (
           <p className="text-sm text-amber-200 mb-4">{supabaseError}</p>
-        ) : null}
-
-        {failedAttempts >= 1 ? (
-          <p className="text-sm text-pink-200/90 mb-3">
-            Подскажу с логином немного, `*****.**@gmail.com` - что-то связанное с первой встречей
-          </p>
-        ) : null}
-
-        {failedAttempts >= 2 ? (
-          <p className="text-sm text-pink-200/90 mb-3">
-            Ну ладно) пароль - когда мы встретились
-          </p>
-        ) : null}
-
-        {failedAttempts >= 3 ? (
-          <p className="text-sm text-pink-200/90 mb-4">
-            Еще немного помогу) формат пароля `**.**.**`
-          </p>
         ) : null}
 
         <form className="space-y-4" onSubmit={handleSubmit}>
