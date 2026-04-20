@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { getSupabaseClient } from '@/lib/supabase/client'
 
-const TARGET_DATE: Date | null = null
+const TARGET_DATE = '2026-05-20T08:00:00+03:00'
 const GIRL_EMAIL = 'nekto.me@gmail.com'
 const BOY_EMAIL = 'iancovoi.vladimir@gmail.com'
 
@@ -122,15 +122,16 @@ type PartnerAnswerView = {
 
 export default function Page() {
   const supabaseError = getSupabaseConfigError()
-  const [time, setTime] = useState(() => getTime(TARGET_DATE))
+  const [nowMs, setNowMs] = useState(() => Date.now())
   const [mouse, setMouse] = useState({ x: 0, y: 0 })
   const [tab, setTab] = useState<'counter' | 'questions'>('counter')
   const [isLoadingAuth, setIsLoadingAuth] = useState(() => !supabaseError)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const time = getTime(TARGET_DATE, nowMs)
 
   useEffect(() => {
     const t = setInterval(() => {
-      setTime(getTime(TARGET_DATE))
+      setNowMs(Date.now())
     }, 1000)
     return () => clearInterval(t)
   }, [])
@@ -272,13 +273,13 @@ export default function Page() {
   )
 }
 
-function getTime(target: Date | null) {
+function getTime(target: string | null, nowMs = Date.now()) {
   if (!target) {
     return { days: 0, hours: 0, minutes: 0, seconds: 0 }
   }
 
-  const now = new Date()
-  const diff = target.getTime() - now.getTime()
+  const targetDate = new Date(target)
+  const diff = targetDate.getTime() - nowMs
 
   const safeDiff = diff > 0 ? diff : 0
 
@@ -306,18 +307,18 @@ function CountdownSection({
   hasTargetDate: boolean
 }) {
   return (
-    <section className="mx-auto mb-20 max-w-5xl rounded-[36px] border border-white/10 bg-white/[0.045] p-6 md:p-8 shadow-2xl backdrop-blur">
-      <p className="text-white/45 text-xs tracking-[0.35em] uppercase mb-4">
+    <section className="mx-auto mb-20 w-full max-w-[1120px] rounded-[32px] border border-white/10 bg-white/[0.04] p-6 md:p-8 shadow-2xl backdrop-blur">
+      <p className="text-white/45 text-xs tracking-[0.35em] uppercase mb-3">
         Next time
       </p>
 
       {hasTargetDate ? (
         <>
-          <h2 className="text-3xl md:text-5xl font-semibold mb-8">
+          <h2 className="text-3xl md:text-5xl font-semibold mb-7">
             Until we meet again
           </h2>
 
-          <div className="flex justify-center gap-6 sm:gap-8 md:gap-12 lg:gap-16 px-4">
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-5 md:gap-6 px-2">
             <Box value={time.days} label="DAYS" />
             <Box value={time.hours} label="HOURS" />
             <Box value={time.minutes} label="MIN" />
@@ -345,7 +346,7 @@ function Box({ value, label }: { value: number; label: string }) {
       <div className="relative">
         <div className="absolute inset-0 blur-3xl opacity-30 bg-pink-400 rounded-3xl" />
         <div
-          className="relative bg-[#0a0a0f]/80 border border-white/10 rounded-3xl px-10 py-8 md:px-16 md:py-12 text-[12vw] md:text-[8vw] font-semibold text-white shadow-xl"
+          className="relative bg-[#0a0a0f]/80 border border-white/10 rounded-3xl px-8 py-6 md:px-12 md:py-8 text-[12vw] md:text-[6.5vw] lg:text-[76px] font-semibold text-white shadow-xl"
           style={{
             textShadow: '0 0 25px rgba(255,200,220,0.15)',
             fontVariantNumeric: 'tabular-nums'
